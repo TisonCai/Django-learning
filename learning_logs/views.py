@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from learning_logs.models import Topic
+from learning_logs.models import Topic,Entry
 from .forms import TopicForm,EntryForm
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -50,3 +50,55 @@ def new_entry(request,topic_id):
             new_entry.topic = topic
             new_entry.save()
             return HttpResponseRedirect(reverse('learning_logs:topic',args=[topic_id]))
+
+
+def edit_entry(request,entry_id):
+    entry = Entry.objects.get(id=entry_id)
+    topic = entry.topic
+
+    if request.method != 'POST':
+        # 填充当前的form
+        form = EntryForm(instance=entry)
+        context = {'entry': entry,
+                   'topic': topic,
+                   'form': form,}
+        return render(request,'learning_logs/edit_entry.html',context)
+    else:
+        form = EntryForm(instance=entry,data=request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('learning_logs:topic',args=[topic.id]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
