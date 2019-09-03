@@ -18,11 +18,9 @@ def register(request):
         form = UserCreationForm()
     else:
         form = UserCreationForm(data=request.POST)
-        print('form is valid or not',form.is_valid())
-        print('form is valid or not', form)
         if form.is_valid():
             new_user = form.save()
-            user_authenticate = authenticate(username=new_user.username,password=request.POST['password'])
+            user_authenticate = authenticate(username=new_user.username,password=request.POST.get('password1',''))
             if user_authenticate is None:
                 return HttpResponseRedirect(reverse('users:invalid_register'))
             else:
@@ -33,28 +31,6 @@ def register(request):
 
     context = {'form': form}
     return render(request, 'users/register.html', context)
-
-
-
-# def register(request):
-#     """注册新用户"""
-#     if request.method != 'POST': # 显示空的注册表单
-#         form = UserCreationForm()
-#     else:
-#         # 处理填写好的表单
-#         form = UserCreationForm(data=request.POST)
-#         if form.is_valid():
-#             new_user = form.save()
-#             usename = request.POST.get('username','')
-#             password = request.POST.get('password', '')
-#             # 让用户自动登录，再重定向到主页
-#             authenticated_user = authenticate(username=usename,password=password)
-#             if authenticated_user is None:
-#                 return HttpResponseRedirect(reverse('users:invalid_register'))
-#             else:
-#                 login(request, authenticated_user)
-#                 return HttpResponseRedirect(reverse('learning_logs:index'))
-
 
 
 def invalid_register(request):

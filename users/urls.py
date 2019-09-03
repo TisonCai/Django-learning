@@ -11,7 +11,9 @@ urlpatterns = [
     re_path(r'^logout/$',views.logout_view,name='logout'),
     # 注册
     re_path(r'^register/$', views.register, name='register'),
+    re_path(r'^invalid_register/(?P<form>\d+)/$',views.invalid_register,name='invalid_register2'),
     # 注册失败
     re_path(r'^invalid_register/$', views.invalid_register, name='invalid_register'),
 
+    
 ]
