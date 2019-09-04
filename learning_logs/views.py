@@ -1,42 +1,56 @@
 from django.shortcuts import render
 from learning_logs.models import Topic,Entry
 from .forms import TopicForm,EntryForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,Http404
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def index(request):
     return render(request,'learning_logs/index.html')
 
-
+@login_required
 def topics(request):
     """显示所有主题"""
-    topics = Topic.objects.order_by('date_added')
+    topics = Topic.objects.filter(owner=request.user).order_by('date_added')
     context = {'topics':topics}
     return render(request,'learning_logs/topics.html',context)
 
 
+@login_required
 def topic(request,topic_id):
+    """请求主题详情"""
     topic = Topic.objects.get(id=topic_id)
+    if topic.check_topic_owner(request.user):
+        raise Http404
+
     entries = topic.entry_set.order_by('-date_added')   # 降序排序
     context = {'topic':topic,'entries':entries}
     return render(request,'learning_logs/topic.html',context)
 
 
+@login_required
 def new_topic(request):
+    """添加新主题"""
     if request.method != 'POST':
         form = TopicForm()
-        context = {'form': form}
-        return render(request,'learning_logs/new_topic.html',context)
     else:
         form = TopicForm(request.POST)
         if form.is_valid():
-            form.save()
+            new_topic = form.save(commit=False)
+            new_topic.owner = request.user
+            new_topic.save()
             return HttpResponseRedirect(reverse('learning_logs:topics'))
 
+    context = {'form': form}
+    return render(request, 'learning_logs/new_topic.html', context)
 
+
+@login_required
 def new_entry(request,topic_id):
     topic = Topic.objects.get(id=topic_id)
+    if topic.check_topic_owner(request.user):
+        raise Http404
 
     if request.method != 'POST':
         form = EntryForm()
@@ -52,9 +66,13 @@ def new_entry(request,topic_id):
             return HttpResponseRedirect(reverse('learning_logs:topic',args=[topic_id]))
 
 
+@login_required
 def edit_entry(request,entry_id):
+    """编辑条目"""
     entry = Entry.objects.get(id=entry_id)
     topic = entry.topic
+    if topic.check_topic_owner(request.user):
+        raise Http404
 
     if request.method != 'POST':
         # 填充当前的form
